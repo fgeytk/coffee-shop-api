@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
 	"github.com/gorilla/mux"
 )
 
@@ -54,6 +53,21 @@ var drinks = []Drink{
 var orders []Order
 var orderCounter int = 1
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func getMenu(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(drinks)
@@ -100,7 +114,7 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 	//gerer l'erreur
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Données de commande invalides"})
 		return
 	}
 	//verifie si la boisson existe
@@ -113,7 +127,7 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	if foundDrink == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Drink not found"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Boisson introuvable"})
 		return
 	}
 	// identifiant unique
@@ -130,10 +144,30 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 	orders = append(orders, newOrder)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(newOrder)
-	fmt.Printf("New order created: %+v\n", newOrder)
+	fmt.Printf("Nouvelle commande: %+v\n", newOrder)
 
 }
 
+func getOrders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(orders)
+	fmt.Println("Liste des commandes :")
+}
+
+func getOrder(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	orderId := mux.Vars(r)["id"]
+	for _, order := range orders {
+		if order.ID == orderId {
+			json.NewEncoder(w).Encode(order)
+			fmt.Printf("Détails de la commande %s : %+v\n", orderId, order)
+			return
+		}
+	}
+	w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(map[string]string{"error": "Commande introuvable"})
+}
+	
 func main() {
 
 	//Routeur mux
@@ -143,10 +177,13 @@ func main() {
 	r.HandleFunc("/menu", getMenu).Methods("GET")
 	r.HandleFunc("/drinks/{id}", getDrink).Methods("GET")
 	r.HandleFunc("/orders", createOrder).Methods("POST")
+	r.HandleFunc("/orders", getOrders).Methods("GET")
+	r.HandleFunc("/orders/{id}", getOrder).Methods("GET")
+
 
 	//Démarrer le serveur
 	fmt.Println("Server is starting on port 8080...")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	if err := http.ListenAndServe(":8080", corsMiddleware(r)); err != nil {
 		fmt.Printf("Error starting server: %s\n", err)
 	}
 }
