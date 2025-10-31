@@ -1,6 +1,7 @@
 package main
 
 import (
+	"coffee-shop-api/models"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,49 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Drink représente une boisson du menu
-type Drink struct {
-	ID        string  `json:"id"`
-	Name      string  `json:"name"`
-	Category  string  `json:"category"` // coffee, tea, cold
-	BasePrice float64 `json:"base_price"`
-}
-
-// OrderStatus représente l'état d'une commande
-type OrderStatus string
-
-const (
-	StatusPending   OrderStatus = "pending"
-	StatusPreparing OrderStatus = "preparing"
-	StatusReady     OrderStatus = "ready"
-	StatusPickedUp  OrderStatus = "picked-up"
-	StatusCancelled OrderStatus = "cancelled"
-)
-
-// Order représente une commande
-type Order struct {
-	ID           string      `json:"id"`
-	DrinkID      string      `json:"drink_id"`
-	DrinkName    string      `json:"drink_name"`
-	Size         string      `json:"size"`   // small, medium, large
-	Extras       []string    `json:"extras"` // milk, sugar, cream, caramel
-	CustomerName string      `json:"customer_name"`
-	Status       OrderStatus `json:"status"`
-	TotalPrice   float64     `json:"total_price"`
-	OrderedAt    time.Time   `json:"ordered_at"`
-}
-
-// Base de données en mémoire
-var drinks = []Drink{
-	{ID: "1", Name: "Espresso", Category: "coffee", BasePrice: 2.0},
-	{ID: "2", Name: "Cappuccino", Category: "coffee", BasePrice: 3.0},
-	{ID: "3", Name: "Latte", Category: "coffee", BasePrice: 3.5},
-	{ID: "4", Name: "Black Tea", Category: "tea", BasePrice: 2.5},
-	{ID: "5", Name: "Green Tea", Category: "tea", BasePrice: 2.5},
-	{ID: "6", Name: "Iced Coffee", Category: "cold", BasePrice: 3.0},
-	{ID: "7", Name: "Iced Tea", Category: "cold", BasePrice: 2.5},
-}
-var orders []Order
+var orders []models.Order
 var orderCounter int = 1
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -70,7 +29,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 func getMenu(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(drinks)
+	json.NewEncoder(w).Encode(models.Drinks) // Use the Drinks slice from models
 	fmt.Println("Menu :")
 }
 
@@ -78,7 +37,7 @@ func getDrink(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 	drinkID := vars["id"]
-	for _, drink := range drinks {
+	for _, drink := range models.Drinks { // Use the Drinks slice from models
 		if drink.ID == drinkID {
 			json.NewEncoder(w).Encode(drink)
 			return
@@ -109,7 +68,7 @@ func calculatePrice(basePrice float64, size string, extras []string) float64 {
 
 func createOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var newOrder Order
+	var newOrder models.Order // Use the Order struct from models
 	err := json.NewDecoder(r.Body).Decode(&newOrder)
 	//gerer l'erreur
 	if err != nil {
@@ -118,8 +77,8 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//verifie si la boisson existe
-	var foundDrink *Drink
-	for _, drink := range drinks {
+	var foundDrink *models.Drink
+	for _, drink := range models.Drinks { // Use the Drinks slice from models
 		if drink.ID == newOrder.DrinkID {
 			foundDrink = &drink
 			break
@@ -135,7 +94,7 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 	orderCounter++
 
 	newOrder.DrinkName = foundDrink.Name
-	newOrder.Status = StatusPending
+	newOrder.Status = models.StatusPending // Use the StatusPending from models
 	newOrder.OrderedAt = time.Now()
 
 	// prix (a implémenter calculatePrice)
@@ -172,7 +131,7 @@ func updateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	orderId := mux.Vars(r)["id"]
 	var statusUpdate struct {
-		Status OrderStatus `json:"status"`
+		Status models.OrderStatus `json:"status"` // Use the OrderStatus from models
 	}
 	err := json.NewDecoder(r.Body).Decode(&statusUpdate)
 	if err != nil {
@@ -198,7 +157,7 @@ func deleteOrder(w http.ResponseWriter, r *http.Request) {
 
 	for i, order := range orders {
 		if order.ID == orderId {
-			if order.Status == StatusPickedUp {
+			if order.Status == models.StatusPickedUp { // Use the StatusPickedUp from models
 				w.WriteHeader(http.StatusBadRequest)
 				json.NewEncoder(w).Encode(map[string]string{"error": "Impossible d'annuler une commande déjà récupérée"})
 				return
