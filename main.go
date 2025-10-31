@@ -199,23 +199,20 @@ func deleteOrder(w http.ResponseWriter, r *http.Request) {
 
 	for i, order := range orders {
 		if order.ID == orderId {
-			// a. Vérifier que le statut n'est pas "picked-up"
 			if order.Status == StatusPickedUp {
-				// b. Si picked-up : retourner 400 Bad Request
 				w.WriteHeader(http.StatusBadRequest)
 				json.NewEncoder(w).Encode(map[string]string{"error": "Impossible d'annuler une commande déjà récupérée"})
 				return
 			}
-			// c. Sinon : supprimer la commande du slice
 			orders = append(orders[:i], orders[i+1:]...)
-			// d. Retourner 204 No Content
+			//204
 			w.WriteHeader(http.StatusNoContent)
 			fmt.Printf("Commande %s supprimée\n", orderId)
 			return
 		}
 	}
 
-	// 4. Si non trouvée : retourner 404
+	//404
 	w.WriteHeader(http.StatusNotFound)
 	json.NewEncoder(w).Encode(map[string]string{"error": "Commande introuvable"})
 }
