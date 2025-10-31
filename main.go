@@ -167,6 +167,31 @@ func getOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	json.NewEncoder(w).Encode(map[string]string{"error": "Commande introuvable"})
 }
+
+func updateOrderStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	orderId := mux.Vars(r)["id"]
+	var statusUpdate struct {
+		Status OrderStatus `json:"status"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&statusUpdate)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Données de mise à jour invalides"})
+		return
+	}
+	for i, order := range orders {
+		if order.ID == orderId {
+			orders[i].Status = statusUpdate.Status
+			json.NewEncoder(w).Encode(orders[i])
+			fmt.Printf("Mise à jour de la commande %s : %+v\n", orderId, orders[i])
+			return
+		}
+	}
+	w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(map[string]string{"error": "Commande introuvable"})
+}
+
 	
 func main() {
 
@@ -179,6 +204,7 @@ func main() {
 	r.HandleFunc("/orders", createOrder).Methods("POST")
 	r.HandleFunc("/orders", getOrders).Methods("GET")
 	r.HandleFunc("/orders/{id}", getOrder).Methods("GET")
+	r.HandleFunc("/orders/{id}/status", updateOrderStatus).Methods("PATCH")
 
 
 	//Démarrer le serveur
