@@ -96,31 +96,27 @@ docker exec -it coffee-shop-db mysql -u coffee_user -p
 
 ```
 coffee-shop-api/
-├── database/          # Configuration base de données
-├── handlers/          # Handlers des routes API
-├── Dockerfile.api     # Dockerfile pour l'API
-├── Dockerfile.mysql   # Dockerfile pour MySQL
-├── docker-compose.yml # Orchestration des services
-├── init.sql          # Script d'initialisation de la BDD
-├── main.go           # Point d'entrée de l'application
-└── .env              # Variables d'environnement (à créer)
-```
-
-## 🧪 Tests
-
-```powershell
-# Tester le menu
-Invoke-RestMethod -Uri http://localhost:8080/menu
-
-# Créer une commande
-$body = @{
-    drink_id = "1"
-    customer_name = "John"
-    size = "large"
-    extras = @("milk", "sugar")
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri http://localhost:8080/orders -Method POST -Body $body -ContentType "application/json"
+├── database/
+│   └── db.go              # Configuration et connexion MySQL
+├── handlers/
+│   ├── drinks.go          # Handlers pour les boissons
+│   ├── middleware.go      # Middleware CORS
+│   └── orders.go          # Handlers pour les commandes
+├── models/
+│   ├── drink.go           # Modèle Drink
+│   └── order.go           # Modèle Order
+├── .air.toml              # Configuration Air (hot reload)
+├── .env                   # Variables d'environnement (à créer)
+├── .env.example           # Template des variables d'environnement
+├── .gitignore             # Fichiers à ignorer par Git
+├── Dockerfile.api         # Dockerfile pour l'API Go
+├── Dockerfile.mysql       # Dockerfile pour MySQL
+├── docker-compose.yml     # Orchestration des services
+├── go.mod                 # Dépendances Go
+├── go.sum                 # Checksums des dépendances
+├── init.sql               # Script d'initialisation de la BDD
+├── main.go                # Point d'entrée de l'application
+└── README.md              # Documentation du projet
 ```
 
 ## 🔧 Commandes utiles
