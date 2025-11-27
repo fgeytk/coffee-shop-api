@@ -1,3 +1,4 @@
+#docker pour l'api GO
 # Build stage
 FROM golang:1.23-alpine AS builder
 
@@ -24,3 +25,15 @@ COPY --from=builder /app/coffee-shop-api .
 EXPOSE 8080
 
 CMD ["./coffee-shop-api"]
+
+#pour lancer la base de données MySQL avec les bonnes configurations
+#docker run -d `
+#  --name coffee-shop-db `
+# --network coffee-network `
+#  -e MYSQL_ROOT_PASSWORD=root123 `
+#  -e MYSQL_DATABASE=coffee_shop `
+#  -e MYSQL_USER=coffee_user `
+#  -e MYSQL_PASSWORD=coffee123 `
+#  -p 3306:3306 `
+#  -v ${PWD}/init.sql:/docker-entrypoint-initdb.d/init.sql `
+#  mysql:8.0
