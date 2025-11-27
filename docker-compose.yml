@@ -25,11 +25,10 @@ services:
       retries: 5
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
+    image: cosmtrek/air:latest
     container_name: coffee-shop-api
     restart: always
+    working_dir: /app
     ports:
       - "8080:8080"
     env_file:
@@ -37,6 +36,8 @@ services:
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
+    volumes:
+      - .:/app
     depends_on:
       mysql:
         condition: service_healthy
