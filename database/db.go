@@ -5,18 +5,28 @@ import (
     "fmt"
     "log"
     "os"
-
-    _ "github.com/go-sql-driver/mysql"  // <- Ajouter le underscore
+    "github.com/joho/godotenv"
+    _ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sql.DB
 
 func InitDB() {
-    host := getEnv("DB_HOST", "localhost")
-    port := getEnv("DB_PORT", "3306")
-    user := getEnv("DB_USER", "coffee_user")
-    password := getEnv("DB_PASSWORD", "coffee123")
-    dbname := getEnv("DB_NAME", "coffee_shop")
+    // Charger le fichier .env
+    if err := godotenv.Load(); err != nil {
+        log.Println("Warning: .env file not found, using environment variables")
+    }
+
+    host := os.Getenv("DB_HOST")
+    port := os.Getenv("DB_PORT")
+    user := os.Getenv("DB_USER")
+    password := os.Getenv("DB_PASSWORD")
+    dbname := os.Getenv("DB_NAME")
+
+    // Vérifier que les variables sont définies
+    if host == "" || port == "" || user == "" || password == "" || dbname == "" {
+        log.Fatal("❌ Missing database configuration in .env file")
+    }
 
     dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, port, dbname)
     
