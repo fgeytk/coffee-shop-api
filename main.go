@@ -1,6 +1,7 @@
 package main
 
 import (
+	"coffee-shop-api/database"
 	"coffee-shop-api/handlers"
 	"fmt"
 	"net/http"
@@ -9,6 +10,9 @@ import (
 )
 
 func main() {
+	// Initialiser la connexion à la base de données
+	database.InitDB()
+	defer database.DB.Close()
 
 	//Routeur mux
 	r := mux.NewRouter()
